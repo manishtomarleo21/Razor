@@ -3,6 +3,7 @@
 
 // For use of Razor applications
 #include "Razor/Application.h"
+#include "Razor/Log.h"
 
 //--------ENtry point-------
 
