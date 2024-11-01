@@ -59,7 +59,7 @@ namespace Razor {
 		EVENT_CLASS_TYPE(KeyReleased)
 	};
 
-	/*class RAZOR_API KeyTypedEvent : public keyEvent
+	class RAZOR_API KeyTypedEvent : public keyEvent
 	{
 	public:
 		KeyTypedEvent(int keycode)
@@ -73,6 +73,6 @@ namespace Razor {
 		}
 
 		EVENT_CLASS_TYPE(KeyTyped)
-	};*/
+	};
 }
 

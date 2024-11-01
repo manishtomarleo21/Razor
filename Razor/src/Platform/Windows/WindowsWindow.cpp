@@ -1,5 +1,8 @@
+//#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include "rzpch.h"
 #include "Platform/Windows/WindowsWindow.h"
+#include "Platform/OpenGL/OpenGLContext.h"
 
 //#include "Hazel/Core/Input.h"
 
@@ -7,9 +10,11 @@
 #include "Razor/Events/MouseEvent.h"
 #include "Razor/Events/KeyEvent.h"
 
+
+
 //#include "Razor/Renderer/Renderer.h"
 
-//#include "Platform/OpenGL/OpenGLContext.h"
+
 
 namespace Razor {
 
@@ -43,7 +48,11 @@ namespace Razor {
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
 
+
 		RZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+		
+		
+
 
 		if (!s_GLFWInitialized) {
 
@@ -55,7 +64,17 @@ namespace Razor {
 
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+
+		m_Context = new OpenGLContext(m_Window);
+		m_Context->Init();
+
 		glfwMakeContextCurrent(m_Window);
+
+		
+		 //gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+		 int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		
+		RZ_CORE_ASSERT(status, "Failed to initialize Glad!");
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
@@ -106,6 +125,14 @@ namespace Razor {
 						break;
 					}
 				}
+
+			});
+
+		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode ) {
+
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			KeyTypedEvent event(keycode);
+			data.EventCallback(event);
 
 			});
 
@@ -161,7 +188,7 @@ namespace Razor {
 	{
 
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		m_Context->SwapBuffer();
 	}
 	
 	void WindowsWindow::SetVSync(bool enabled)

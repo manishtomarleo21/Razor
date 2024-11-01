@@ -11,7 +11,7 @@ namespace Razor {
 	enum class EventType {
 		None = 0,
 		WindowClose, WindowResize, WindowFocus, WindowLostFocus, WindowMoved, AppTick, AppUpdate, AppRender, KeyPressed,
-		KeyReleased, MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled, 
+		KeyReleased, KeyTyped, MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled,
 	};
 
 	enum EventCategory {
@@ -42,8 +42,12 @@ namespace Razor {
 		{
 			return GetCategoryFlags() & category;
 		}
+		inline bool Handled() const {
+			return m_Handled;
+		}
 	protected:
 		bool m_Handled = false;
+		
 	};
 
 

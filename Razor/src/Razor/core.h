@@ -1,11 +1,16 @@
 #pragma once
+#include <memory>
 
 #ifdef RZ_PLATFORM_WINDOWS
+#if RZ_DYNAMIC_LINK
 	#ifdef RZ_BUILD_DLL
 		#define RAZOR_API __declspec(dllexport)
 	#else 
 		#define RAZOR_API __declspec(dllimport)
 	#endif
+#else
+	#define RAZOR_API
+#endif
 #else
 	#error RAZOR ONLY SUPPORTS WINDOWS!
 #endif
@@ -19,3 +24,14 @@
 #endif
 
 #define BIT(x)(1 << x)
+
+#define RZ_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
+namespace Razor
+{
+	template<typename T>
+	using Scope = std::unique_ptr<T>;
+
+	template<typename T>
+	using Ref = std::shared_ptr<T>;
+}

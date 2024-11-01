@@ -1,10 +1,10 @@
 #pragma once
-#pragma once
-
-#include "../../../Razor/Razor/Window.h"
-//#include "Hazel/Renderer/GraphicsContext.h"
-
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "../../../Razor/Razor/Window.h"
+#include "Razor/Renderer/GraphicsContext.h"
+
+
 
 namespace Razor {
 
@@ -31,6 +31,7 @@ namespace Razor {
 	private:
 		GLFWwindow* m_Window;
 		//Scope<GraphicsContext> m_Context;
+		GraphicsContext* m_Context;
 
 		struct WindowData
 		{
