@@ -2,7 +2,7 @@
 //#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Application.h"
-#include "Events/ApplicationEvent.h"
+#include "Razor/Events/ApplicationEvent.h"
 #include "Log.h"
 #include "Input.h"
 #include "Razor/Renderer/Renderer.h"
@@ -16,12 +16,18 @@ namespace Razor {
 	 Application* Application::s_Instance = nullptr;
 
 
-	Application::Application()
+	Application::Application(const std::string& name)
 	{
+		RZ_PROFILE_FUNCTION();
+
+
 		RZ_CORE_ASSERT(!s_Instance, "Application Already Exists!");
 		s_Instance = this;
-		m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(name)));
+		//m_Window = std::unique_ptr<Window>(Window::Create());
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
+
+		Renderer::Init();
 
 		m_ImGuiLayer = new ImGuiLayer(); 
 		PushOverlay(m_ImGuiLayer);
@@ -42,6 +48,7 @@ namespace Razor {
 	{
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
 		//RZ_CORE_TRACE("{0}", e);
 
 
@@ -64,8 +71,11 @@ namespace Razor {
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
-			for (Layer* layer : m_LayerStack) {
-				layer->OnUpdate(timestep);
+			
+			if (!m_Minimized) {
+				for (Layer* layer : m_LayerStack) {
+					layer->OnUpdate(timestep);
+				}
 			}
 
 			m_ImGuiLayer->Begin();
@@ -83,10 +93,26 @@ namespace Razor {
 
 	}
 
+	void Application::Close()
+	{
+		m_Running = false;
+	}
+
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
 		m_Running = false;
 		return true;
+	}
+
+	bool Application::OnWindowResize(WindowResizeEvent& e)
+	{
+		if (e.GetHeight() == 0 || e.GetWidth() == 0) {
+			m_Minimized = true;
+			return false;
+		}
+		m_Minimized = false;
+		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+		return false;
 	}
 
 }

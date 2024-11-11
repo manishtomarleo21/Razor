@@ -16,6 +16,12 @@
     <Filter Include="src\Razor">
       <UniqueIdentifier>{4A2EBFB3-B698-732A-FFD6-24D06B80517F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Razor\Core">
+      <UniqueIdentifier>{E2D082E0-CE9E-76E6-B732-E70CA39F524B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Razor\Debug">
+      <UniqueIdentifier>{4048E9F0-ACD3-56B5-B5E4-D9A921EFB2B5}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Razor\Events">
       <UniqueIdentifier>{EEA29C11-DA9B-BB63-03CE-A0E8EF259B6F}</UniqueIdentifier>
     </Filter>
@@ -46,9 +52,30 @@
     <Filter Include="vendor\glm\glm\gtx">
       <UniqueIdentifier>{B3A6A76B-9F8A-68C1-08EB-6214F4ED5243}</UniqueIdentifier>
     </Filter>
+    <Filter Include="vendor\stb_image">
+      <UniqueIdentifier>{0DA0BA59-F998-D9AB-22CB-BE300E23B9B7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLShader.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Windows\WindowsInput.h">
@@ -60,11 +87,41 @@
     <ClInclude Include="src\Razor.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Razor\Application.h">
-      <Filter>src\Razor</Filter>
+    <ClInclude Include="src\Razor\Core\Application.h">
+      <Filter>src\Razor\Core</Filter>
     </ClInclude>
-    <ClInclude Include="src\Razor\EntryPoint.h">
-      <Filter>src\Razor</Filter>
+    <ClInclude Include="src\Razor\Core\EntryPoint.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\Input.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\KeyCodes.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\Layer.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\LayerStack.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\Log.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\MouseButtonCodes.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\Timestep.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\Window.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\core.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Debug\Instrumentor.h">
+      <Filter>src\Razor\Debug</Filter>
     </ClInclude>
     <ClInclude Include="src\Razor\Events\ApplicationEvent.h">
       <Filter>src\Razor\Events</Filter>
@@ -81,29 +138,44 @@
     <ClInclude Include="src\Razor\ImGui\ImGuiLayer.h">
       <Filter>src\Razor\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="src\Razor\Input.h">
-      <Filter>src\Razor</Filter>
+    <ClInclude Include="src\Razor\Renderer\Buffer.h">
+      <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Razor\KeyCodes.h">
-      <Filter>src\Razor</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Razor\Layer.h">
-      <Filter>src\Razor</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Razor\LayerStack.h">
-      <Filter>src\Razor</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Razor\Log.h">
-      <Filter>src\Razor</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Razor\MouseButtonCodes.h">
-      <Filter>src\Razor</Filter>
+    <ClInclude Include="src\Razor\Renderer\Framebuffer.h">
+      <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Razor\Renderer\GraphicsContext.h">
       <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Razor\core.h">
-      <Filter>src\Razor</Filter>
+    <ClInclude Include="src\Razor\Renderer\OrthographicCamera.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\OrthographicCameraController.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\RenderCommand.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\Renderer.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\Renderer2D.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\RendererAPI.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\Shader.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\SubTexture2D.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\Texture.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\VertexArray.h">
+      <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\rzpch.h">
       <Filter>src</Filter>
@@ -1356,21 +1428,30 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp">
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\Razor\Renderer\Shader.h" />
-    <ClInclude Include="src\Razor\Renderer\Buffer.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
-    <ClInclude Include="src\Razor\Renderer\Renderer.h" />
-    <ClInclude Include="src\Razor\Renderer\VertexArray.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h" />
-    <ClInclude Include="src\Razor\Renderer\RendererAPI.h" />
-    <ClInclude Include="src\Razor\Renderer\RenderCommand.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h" />
-    <ClInclude Include="src\Razor\Renderer\OrthographicCamera.h" />
-    <ClInclude Include="src\Razor\Core\Timestep.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLShader.h" />
+    <ClInclude Include="vendor\stb_image\stb_image.h">
+      <Filter>vendor\stb_image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
@@ -1379,8 +1460,17 @@
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Platform\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="src\Razor\Application.cpp">
-      <Filter>src\Razor</Filter>
+    <ClCompile Include="src\Razor\Core\Application.cpp">
+      <Filter>src\Razor\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Core\Layer.cpp">
+      <Filter>src\Razor\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Core\LayerStack.cpp">
+      <Filter>src\Razor\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Core\Log.cpp">
+      <Filter>src\Razor\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Razor\ImGui\ImGuiBuild.cpp">
       <Filter>src\Razor\ImGui</Filter>
@@ -1388,28 +1478,47 @@
     <ClCompile Include="src\Razor\ImGui\ImGuiLayer.cpp">
       <Filter>src\Razor\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="src\Razor\Layer.cpp">
-      <Filter>src\Razor</Filter>
+    <ClCompile Include="src\Razor\Renderer\Buffer.cpp">
+      <Filter>src\Razor\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Razor\LayerStack.cpp">
-      <Filter>src\Razor</Filter>
+    <ClCompile Include="src\Razor\Renderer\Framebuffer.cpp">
+      <Filter>src\Razor\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Razor\Log.cpp">
-      <Filter>src\Razor</Filter>
+    <ClCompile Include="src\Razor\Renderer\OrthographicCamera.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\OrthographicCameraController.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\RenderCommand.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\Renderer.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\Renderer2D.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\RendererAPI.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\Shader.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\SubTexture2D.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\Texture.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\VertexArray.cpp">
+      <Filter>src\Razor\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\rzpch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Razor\Renderer\Shader.cpp" />
-    <ClCompile Include="src\Razor\Renderer\Buffer.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
-    <ClCompile Include="src\Razor\Renderer\Renderer.cpp" />
-    <ClCompile Include="src\Razor\Renderer\VertexArray.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp" />
-    <ClCompile Include="src\Razor\Renderer\RendererAPI.cpp" />
-    <ClCompile Include="src\Razor\Renderer\RenderCommand.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp" />
-    <ClCompile Include="src\Razor\Renderer\OrthographicCamera.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp" />
+    <ClCompile Include="vendor\stb_image\stb_image.cpp">
+      <Filter>vendor\stb_image</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

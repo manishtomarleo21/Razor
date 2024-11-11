@@ -1,5 +1,5 @@
 #pragma once
-#include "Razor/Input.h"
+#include "Razor/Core/Input.h"
 
 namespace Razor
 {

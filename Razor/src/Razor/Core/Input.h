@@ -2,7 +2,7 @@
 
 //#include "Razor/Events/KeyCodes.h"
 //#include "Hazel/Core/MouseCodes.h"
-#include "Razor/core.h"
+#include "Razor/Core/core.h"
 
 //#include <glm/glm.hpp>
 

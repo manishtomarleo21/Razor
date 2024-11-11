@@ -2,7 +2,7 @@
 
 #include "rzpch.h"
 #include <spdlog/fmt/ostr.h>
-#include "../core.h"
+#include "Razor/Core/core.h"
 
 
 

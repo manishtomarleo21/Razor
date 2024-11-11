@@ -32,6 +32,8 @@ namespace Razor {
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
+		RZ_PROFILE_FUNCTION();
+
 		Init(props);
 	}
 
@@ -42,7 +44,7 @@ namespace Razor {
 
 	void WindowsWindow::Init(const WindowProps& props)
 	{
-		//RZ_PROFILE_FUNCTION();
+		RZ_PROFILE_FUNCTION();
 
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
@@ -186,6 +188,8 @@ namespace Razor {
 
 	void WindowsWindow::OnUpdate()
 	{
+		RZ_PROFILE_FUNCTION();
+
 
 		glfwPollEvents();
 		m_Context->SwapBuffer();

@@ -1,21 +1,27 @@
 #include <Razor.h>
+//--------ENtry point-------
+
+#include <Razor/Core/EntryPoint.h>
+//--------------------
+
 
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "imgui/imgui.h"
 
 #include <glm/glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "Sandbox2D.h"
 
 
 class ExampleLayer : public Razor::Layer
 {
-	public:
+	public:	
 
 	ExampleLayer()
-		:Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f)
+		:Layer("Example"), m_CameraController(1280.0f / 720.0f)
 	{
 
-		m_VertexArray.reset(Razor::VertexArray::Create());
+		m_VertexArray = Razor::VertexArray::Create();
 
 		float vertices[3 * 7] = {
 			-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
@@ -43,14 +49,14 @@ class ExampleLayer : public Razor::Layer
 		indexBuffer.reset(Razor::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
-		m_SquareVA.reset(Razor::VertexArray::Create());
+		m_SquareVA = Razor::VertexArray::Create();
 
 
-		float squareVertices[3 * 4] = {
-			-0.5f, -0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-			 0.5f,  0.5f, 0.0f,
-			-0.5f,  0.5f, 0.0f
+		float squareVertices[5 * 4] = {
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
 		};
 
 
@@ -59,7 +65,8 @@ class ExampleLayer : public Razor::Layer
 		squareVB.reset(Razor::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 
 		squareVB->SetLayout({
-		{ Razor::ShaderDataType::Float3, "a_Position"}
+		{ Razor::ShaderDataType::Float3, "a_Position"},
+		{ Razor::ShaderDataType::Float2, "a_TexCoord"}
 
 			});
 
@@ -113,7 +120,7 @@ class ExampleLayer : public Razor::Layer
 		
 		)";
 
-		m_Shader.reset(Razor::Shader::Create(vertexSrc, fragmentSrc));
+		m_Shader = Razor::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc);
 
 		std::string flatColorShadervertexSrc = R"(
 
@@ -157,42 +164,33 @@ class ExampleLayer : public Razor::Layer
 		
 		)";
 
-		m_FlatColorShader.reset(Razor::Shader::Create(flatColorShadervertexSrc, flatColorShaderfragmentSrc));
+		m_FlatColorShader = Razor::Shader::Create( "FlatColor", flatColorShadervertexSrc, flatColorShaderfragmentSrc);
 
+		
+		//m_TextureShader = Razor::Shader::Create("assets/shaders/Texture.glsl");
+		auto textureShader = m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
+
+		m_Texture = Razor::Texture2D::Create("assets/textures/checkerboard.png");
+		m_LogoTexture = Razor::Texture2D::Create("assets/textures/logo.png");
+		
+
+		std::dynamic_pointer_cast<Razor::OpenGLShader>(textureShader)->Bind();
+		std::dynamic_pointer_cast<Razor::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
 	}
 
 	void OnUpdate(Razor::Timestep ts) override
 	{
 		//RZ_TRACE("Delta time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliSeconds());
 
-		if (Razor::Input::IsKeyPressed(RZ_KEY_LEFT)) {
-			m_CameraPosition.x -= m_CameraMoveSpeed * ts;
-		}
-		else if (Razor::Input::IsKeyPressed( RZ_KEY_RIGHT)) {
-			m_CameraPosition.x += m_CameraMoveSpeed * ts;
-		}
+		//Update
+		m_CameraController.OnUpdate(ts);
 
-		if (Razor::Input::IsKeyPressed(RZ_KEY_UP)) {
-			m_CameraPosition.y += m_CameraMoveSpeed * ts;
-		}
-		else if (Razor::Input::IsKeyPressed(RZ_KEY_DOWN)) {
-			m_CameraPosition.y -= m_CameraMoveSpeed* ts;
-		}
-
-		if (Razor::Input::IsKeyPressed(RZ_KEY_A))
-			m_CameraRotation += m_CameraRotationSpeed * ts;
-		if (Razor::Input::IsKeyPressed(RZ_KEY_D))
-			m_CameraRotation -= m_CameraRotationSpeed * ts;
-
-
-		
+		//Renderer
 		Razor::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Razor::RenderCommand::Clear();
 
-		m_Camera.SetPosition(m_CameraPosition);
-		m_Camera.SetRotation(m_CameraRotation);
-
-		Razor::Renderer::BeginScene(m_Camera);
+		
+		Razor::Renderer::BeginScene(m_CameraController.GetCamera());
 
 		//glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_SquarePosition);
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
@@ -213,8 +211,18 @@ class ExampleLayer : public Razor::Layer
 
 		}
 
-		
-		Razor::Renderer::Submit(m_Shader, m_VertexArray);
+		auto textureShader = m_ShaderLibrary.Get("Texture");
+
+		m_Texture->Bind();
+
+		Razor::Renderer::Submit(textureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+
+		m_LogoTexture->Bind();
+
+		Razor::Renderer::Submit(textureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+
+		//Triangle
+		//Razor::Renderer::Submit(m_Shader, m_VertexArray);
 
 		Razor::Renderer::EndScene();
 
@@ -230,26 +238,29 @@ class ExampleLayer : public Razor::Layer
 
 	}
 
-	void OnEvent(Razor::Event& event) override
+	void OnEvent(Razor::Event& e) override
 	{
-		/*Razor::EventDispatcher dispatcher(event);
-		dispatcher.Dispatch< Razor::KeyPressedEvent>(RZ_BIND_EVENT_FN(ExampleLayer::OnKeyPressedEvent));*/
+		m_CameraController.OnEvent(e);
 	}
 
 private:
+	Razor::ShaderLibrary m_ShaderLibrary;
 	Razor::Ref<Razor::Shader> m_Shader;
 	Razor::Ref<Razor::VertexArray> m_VertexArray;
 
 
 	Razor::Ref<Razor::Shader> m_FlatColorShader;
+	//Razor::Ref<Razor::Shader> m_FlatColorShader, m_TextureShader;
 	Razor::Ref<Razor::VertexArray> m_SquareVA;
 
-	Razor::OrthographicCamera m_Camera;
-	glm::vec3 m_CameraPosition; 
-	float m_CameraMoveSpeed = 5.0f; 
+	Razor::Ref<Razor::Texture2D> m_Texture, m_LogoTexture;
 
-	float m_CameraRotation = 0.0f;
-	float m_CameraRotationSpeed = 10.0f; 
+	Razor::OrthographicCameraController m_CameraController;
+	//glm::vec3 m_CameraPosition; 
+	//float m_CameraMoveSpeed = 5.0f; 
+
+	//float m_CameraRotation = 0.0f;
+	//float m_CameraRotationSpeed = 10.0f; 
 
 	glm::vec3 m_SquareColor = { 0.2f, 0.3f, 0.8f };
 
@@ -259,8 +270,8 @@ class Sandbox : public Razor::Application
 {
 public:
 	Sandbox() {
-		PushLayer(new ExampleLayer());
-		
+		//PushLayer(new ExampleLayer());
+		PushLayer(new Sandbox2D());
 	}
 
 	~Sandbox() {

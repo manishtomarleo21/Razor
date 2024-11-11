@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Razor/core.h"
+#include "Razor/Core/core.h"
 #include "Layer.h"
 
 #include <vector>

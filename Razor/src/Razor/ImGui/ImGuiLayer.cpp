@@ -9,7 +9,7 @@
 
 
 #include <GLFW/glfw3.h>
-#include "Razor/Application.h"
+#include "Razor/Core/Application.h"
 
 namespace Razor
 {

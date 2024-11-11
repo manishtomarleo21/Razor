@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Razor/core.h"
+#include "Razor/Core/core.h"
 #include "Razor/Core/Timestep.h"	
 #include "Razor/Events/Event.h"
 

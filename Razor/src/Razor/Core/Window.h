@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rzpch.h"
-#include "Razor/core.h"
+#include "Razor/Core/core.h"
 #include "Razor/Events/Event.h"
 
 namespace Razor {
