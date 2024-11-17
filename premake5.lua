@@ -17,10 +17,14 @@ IncludeDir["GLFW"] = "Razor/vendor/GLFW/include"
 IncludeDir["ImGui"] = "Razor/vendor/imgui/include"
 IncludeDir["glm"] = "Razor/vendor/glm"
 IncludeDir["stb_image"] = "Razor/vendor/stb_image"
+IncludeDir["entt"] = "Razor/vendor/entt/include" 
+IncludeDir["yaml_cpp"] = "Razor/vendor/yaml-cpp/include" 
+IncludeDir["ImGuizmo"] = "Razor/vendor/ImGuizmo" 
 
 include "Razor/vendor/Glad"
 include "Razor/vendor/GLFW"
 include "Razor/vendor/imgui"
+include "Razor/vendor/yaml-cpp"
 
 project "Razor"
     location "Razor"
@@ -41,7 +45,9 @@ project "Razor"
         "%{prj.name}/vendor/stb_image/**.h",
         "%{prj.name}/vendor/stb_image/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.hpp",
-        "%{prj.name}/vendor/glm/glm/**.inl"
+        "%{prj.name}/vendor/glm/glm/**.inl",
+        "%{prj.name}/vendor/ImGuizmo/ImGuizmo.h",
+        "%{prj.name}/vendor/ImGuizmo/ImGuizmo.cpp"
 
     }
 
@@ -52,16 +58,25 @@ project "Razor"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}",
-        "%{IncludeDir.stb_image}"
+        "%{IncludeDir.stb_image}",
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.yaml_cpp}",
+        "%{IncludeDir.ImGuizmo}"
     }
 
     links{
         "Glad",
         "GLFW",
         "ImGui",
+        "yaml-cpp",
         "opengl32.lib",
         "dwmapi.lib"
     }
+
+   filter { "files:Razor/vendor/ImGuizmo/**.cpp" }
+    flags { "NoPCH" }
+filter {}
+
 
     filter "system:windows"
         systemversion "latest"
@@ -71,6 +86,8 @@ project "Razor"
         "RZ_PLATFORM_WINDOWS",
         "RZ_BUILD_DLL",
         "GLFW_INCLUDE_NONE",
+		"YAML_CPP_STATIC_DEFINE"
+
       --  "IMGUI_API=__declspec(dllexport)" 
     }
 
@@ -121,7 +138,9 @@ project "Sandbox"
         "Razor/vendor/spdlog/include",
         "Razor/src",
         "Razor/vendor",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}"
+
         
        
     }
@@ -179,11 +198,16 @@ project "Razoredge"
         "Razor/vendor/spdlog/include",
         "Razor/src",
         "Razor/vendor",
-        "%{IncludeDir.glm}"
-        
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.yaml_cpp}",
+        "%{IncludeDir.ImGuizmo}"
+
        
     }
 
+
+  
     links {
         "Razor"
     }
@@ -192,7 +216,8 @@ project "Razoredge"
         systemversion "latest"
 
     defines {
-        "RZ_PLATFORM_WINDOWS"
+        "RZ_PLATFORM_WINDOWS",
+        "YAML_CPP_STATIC_DEFINE"
     }
 
 filter "configurations:Debug"

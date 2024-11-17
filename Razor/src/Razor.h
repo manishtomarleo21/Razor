@@ -17,6 +17,11 @@
 
 #include "Razor/ImGui/ImGuiLayer.h"
 
+#include "Razor/Scene/Scene.h"
+#include "Razor/Scene/Entity.h"
+#include "Razor/Scene/ScriptableEntity.h"
+#include "Razor/Scene/Components.h"
+
 //--------Renderer-------
 
 #include "Razor/Renderer/Renderer.h"

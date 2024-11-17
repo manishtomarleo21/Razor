@@ -20,9 +20,13 @@ namespace Razor
 		void Begin();
 		void End();
 
+		void BlockEvents(bool block) { m_BlockEvents = block; }
+
+		void SetDarkThemeColors();
 	private:
-		float m_time;
+		float m_time = 0.0f;
 		bool s_ImGuiInitialized = false;
+		bool m_BlockEvents = true;
 
 	};
 }

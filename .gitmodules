@@ -10,3 +10,9 @@
 [submodule "Razor/vendor/glm"]
 	path = Razor/vendor/glm
 	url = https://github.com/g-truc/glm
+[submodule "Razor/vendor/yaml-cpp"]
+	path = Razor/vendor/yaml-cpp
+	url = https://github.com/TheCherno/yaml-cpp
+[submodule "Razor/vendor/ImGuizmo"]
+	path = Razor/vendor/ImGuizmo
+	url = https://github.com/TheCherno/imguizmo

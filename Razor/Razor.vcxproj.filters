@@ -31,8 +31,17 @@
     <Filter Include="src\Razor\Renderer">
       <UniqueIdentifier>{30254CE2-1C09-0D38-8569-078B716CF7B9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Razor\Scene">
+      <UniqueIdentifier>{E7AAF7F1-5336-65B6-5C47-E8AAC851C1B6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Razor\Utils">
+      <UniqueIdentifier>{2A3F25F2-96CA-92B6-9FDB-15AB0BE6EEB6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\ImGuizmo">
+      <UniqueIdentifier>{73BF7F4C-DF4A-ED10-E85B-700554664911}</UniqueIdentifier>
     </Filter>
     <Filter Include="vendor\glm">
       <UniqueIdentifier>{829FC5A8-6E57-07F6-D75E-E051C335A2E6}</UniqueIdentifier>
@@ -141,6 +150,9 @@
     <ClInclude Include="src\Razor\Renderer\Buffer.h">
       <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\Camera.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Razor\Renderer\Framebuffer.h">
       <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
@@ -177,8 +189,32 @@
     <ClInclude Include="src\Razor\Renderer\VertexArray.h">
       <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Razor\Scene\Components.h">
+      <Filter>src\Razor\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Scene\Entity.h">
+      <Filter>src\Razor\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Scene\Scene.h">
+      <Filter>src\Razor\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Scene\SceneCamera.h">
+      <Filter>src\Razor\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Scene\SceneSerializer.h">
+      <Filter>src\Razor\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Scene\ScriptableEntity.h">
+      <Filter>src\Razor\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Utils\PlatformUtils.h">
+      <Filter>src\Razor\Utils</Filter>
+    </ClInclude>
     <ClInclude Include="src\rzpch.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGuizmo\ImGuizmo.h">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClInclude>
     <ClInclude Include="vendor\glm\glm\common.hpp">
       <Filter>vendor\glm\glm</Filter>
@@ -1457,6 +1493,9 @@
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
       <Filter>src\Platform\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="src\Platform\Windows\WindowsPlatformUtils.cpp">
+      <Filter>src\Platform\Windows</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Platform\Windows</Filter>
     </ClCompile>
@@ -1514,8 +1553,23 @@
     <ClCompile Include="src\Razor\Renderer\VertexArray.cpp">
       <Filter>src\Razor\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Razor\Scene\Entity.cpp">
+      <Filter>src\Razor\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Scene\Scene.cpp">
+      <Filter>src\Razor\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Scene\SceneCamera.cpp">
+      <Filter>src\Razor\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Scene\SceneSerializer.cpp">
+      <Filter>src\Razor\Scene</Filter>
+    </ClCompile>
     <ClCompile Include="src\rzpch.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\ImGuizmo\ImGuizmo.cpp">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>

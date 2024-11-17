@@ -5,7 +5,14 @@
 #include <glm/glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-//#include "Platform/OpenGL/OpenGLShader.h"
+#include "Razor/Scene/SceneSerializer.h"
+#include "Razor/Utils/PlatformUtils.h"
+
+//#include "Platform/OpenGL/OpenGLShader.h
+
+#include "ImGuizmo.h"
+
+#include "Razor/Math/Math.h"
 
 
 namespace Razor
@@ -19,70 +26,149 @@ namespace Razor
 
 	void EditorLayer::OnAttack() 
 	{
-		m_CheckerboardTexture = Razor::Texture2D::Create("assets/textures/checkerboard.png");
+		m_CheckerboardTexture = Texture2D::Create("assets/textures/checkerboard.png");
 		
 
 		//Latest ep 71 
-		Razor::FramebufferSpecification fbSpec;
+		FramebufferSpecification fbSpec;
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
-		m_Framebuffer = Razor::Framebuffer::Create(fbSpec);
+		m_Framebuffer = Framebuffer::Create(fbSpec);
 
-		m_CameraController.SetZoomLevel(5.0f);
+		//This line can be deleted
+		//m_CameraController.SetZoomLevel(5.0f);
+
+
+		m_ActiveScene = CreateRef<Scene>();
+#if 0
+		//Entity
+		auto square = m_ActiveScene->CreateEntity("Green Square");
+		square.AddComponent< SpriteRendererComponent > (glm::vec4{0.0f, 1.0f, 0.0f, 1.0f});
+
+		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
+		redSquare.AddComponent< SpriteRendererComponent >(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
+
+		m_SquareEntity = square;
+
+		m_CameraEntity = m_ActiveScene->CreateEntity("Camera A");
+		m_CameraEntity.AddComponent<CameraComponent>();
+
+		 
+		m_SecondCamera = m_ActiveScene->CreateEntity("Camera B");
+		auto& cc = m_SecondCamera.AddComponent<CameraComponent>();
+	
+		cc.Primary = false;
+
+
+		class CameraController : public ScriptableEntity
+		{
+		public:
+			void OnCreate()
+			{
+				auto& translation = GetComponent<TransformComponent>().Translation;
+				translation.x = rand() % 10 - 5.0f;
+			}
+			void OnDestroy()
+			{
+			}
+			
+			void OnUpdate(Timestep ts) 
+			{
+				auto& translation = GetComponent<TransformComponent>().Translation;
+				float speed = 5.0f;
+
+				if (Input::IsKeyPressed(RZ_KEY_A))
+					translation.x -= speed * ts;
+				if (Input::IsKeyPressed(RZ_KEY_D))
+					translation.x += speed * ts;
+				if (Input::IsKeyPressed(RZ_KEY_W))
+					translation.y += speed * ts;
+				if (Input::IsKeyPressed(RZ_KEY_S))
+					translation.y -= speed * ts;
+
+
+			}
+		};
+		
+		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+		m_SecondCamera.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+#endif
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		 
 	}
 
 	void EditorLayer::OnDetach()
 	{
 	}
 
-	void EditorLayer::OnUpdate(Razor::Timestep ts)
+	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		RZ_PROFILE_FUNCTION();
 
-		m_CameraController.OnUpdate(ts);
+		//Resize
+
+		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
+			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+		{
+			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+			//m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+
+		}
+
+		if(m_ViewportFocused)
+			m_CameraController.OnUpdate(ts);
+
+		
 
 		//Renderer
-		Razor::Renderer2D::ResetStats();
+		Renderer2D::ResetStats();
 
 		RZ_PROFILE_SCOPE("Renderer Prep!");
 		m_Framebuffer->Bind();
 
-		Razor::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
-		Razor::RenderCommand::Clear();
+		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+		RenderCommand::Clear();
 
+		
 
+		//static float rotation = 0.0f;
+		//rotation += ts * 20.0f;
 
-		static float rotation = 0.0f;
-		rotation += ts * 20.0f;
+		//RZ_PROFILE_SCOPE("Renderer Draw!");
 
-		RZ_PROFILE_SCOPE("Renderer Draw!");
+		//Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-		Razor::Renderer2D::BeginScene(m_CameraController.GetCamera());
+		//Update Scene
+		m_ActiveScene->OnUpdate(ts);
 
 		//For rotation use glm::radians
 
-		Razor::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f }, { 0.8f, 0.2f, 0.3f, 1.0f });
-		//Razor::Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 0.8f, 0.8f }, -45.0f, { 0.8f, 0.2f, 0.3f, 1.0f });
-		Razor::Renderer2D::DrawQuad({ 0.5f, -0.5f }, { 0.5f, 0.75f }, { 0.2f, 0.3f, 0.8f, 1.0f });
-		//Razor::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.1f }, { 10.0f, 10.0f }, m_CheckerboardTexture, 10.0f);
-		Razor::Renderer2D::DrawRotatedQuad({ -0.5f, -0.5f, 0.0f }, { 1.0f, 1.0f }, glm::radians(rotation), m_CheckerboardTexture, 20.0f);
-		//Razor::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_CheckerboardTexture, 10.0f, glm::vec4(1.0f, 0.9f, 0.9f, 1.0f));
-		//Razor::Renderer2D::DrawRotatedQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, glm::radians(45.0f), m_CheckerboardTexture, 10.0f, glm::vec4(1.0f, 0.9f, 0.9f, 1.0f));
+		//Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f }, { 0.8f, 0.2f, 0.3f, 1.0f });
+		//Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 0.8f, 0.8f }, -45.0f, { 0.8f, 0.2f, 0.3f, 1.0f });
+		//Renderer2D::DrawQuad({ 0.5f, -0.5f }, { 0.5f, 0.75f }, { 0.2f, 0.3f, 0.8f, 1.0f });
+		//Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.1f }, { 10.0f, 10.0f }, m_CheckerboardTexture, 10.0f);
+		//Renderer2D::DrawRotatedQuad({ -0.5f, -0.5f, 0.0f }, { 1.0f, 1.0f }, glm::radians(rotation), m_CheckerboardTexture, 20.0f);
+		//Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_CheckerboardTexture, 10.0f, glm::vec4(1.0f, 0.9f, 0.9f, 1.0f));
+		//Renderer2D::DrawRotatedQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, glm::radians(45.0f), m_CheckerboardTexture, 10.0f, glm::vec4(1.0f, 0.9f, 0.9f, 1.0f));
 
-		Razor::Renderer2D::EndScene();
+		//Renderer2D::EndScene();
 
-		Razor::Renderer2D::BeginScene(m_CameraController.GetCamera());
+		/*Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 		for (float y = -5.0f; y < 5.0f; y += 0.5f)
 		{
 			for (float x = -5.0f; x < 5.0f; x += 0.5f)
 			{
 				glm::vec4 color = { (x + 5.0f) / 10.0f, 0.4f, (y + 5.0f) / 10.0f, 1.0f };
-				Razor::Renderer2D::DrawQuad({ x,y }, { 0.45f, 0.45f }, color);
+				Renderer2D::DrawQuad({ x,y }, { 0.45f, 0.45f }, color);
 			}
 		}
 
-		Razor::Renderer2D::EndScene();
+		Renderer2D::EndScene();*/
 		m_Framebuffer->Unbind();
 
 		
@@ -153,11 +239,17 @@ namespace Razor
 
 		// Submit the DockSpace
 		ImGuiIO& io = ImGui::GetIO();
+		ImGuiStyle& style = ImGui::GetStyle();
+		float minWinSize = style.WindowMinSize.x;
+		style.WindowMinSize.x = 370.0f;
+		//style.WindowMinSize.x = 310.0f;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
+
+		style.WindowMinSize.x = minWinSize;
 
 
 		if (ImGui::BeginMenuBar())
@@ -165,30 +257,78 @@ namespace Razor
 			if (ImGui::BeginMenu("File"))
 			{
 
-				ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
+				/*ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
 				ImGui::MenuItem("Padding", NULL, &opt_padding);
-				ImGui::Separator();
+				ImGui::Separator();*/
 
-				if (ImGui::MenuItem("Exit")) Razor::Application::Get().Close();
+				if (ImGui::MenuItem("New", "Ctrl+N"))
+				{
+					NewScene();
+				}
+
+
+				if (ImGui::MenuItem("Open...", "Ctrl+O"))
+				{
+					OpenScene();
+				}
+
+				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+				{
+					SaveSceneAs();
+				}
+
+
+				if (ImGui::MenuItem("Exit")) Application::Get().Close();
 				ImGui::EndMenu();
 			}
 
 			ImGui::EndMenuBar();
 		}
 
+
+		m_SceneHierarchyPanel.OnImGuiRender();
+
+
 		//----our Window cODE important
 
-		ImGui::Begin("Settings");
+		ImGui::Begin("Stats");
 
-		auto stats = Razor::Renderer2D::GetStats();
+		auto stats = Renderer2D::GetStats();
 		ImGui::Text("Renderer2D Stats: ");
 		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 		ImGui::Text("Quads: %d", stats.QuadCount);
 		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
+		
+		/*if (m_SquareEntity) {
 
-		ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
+			ImGui::Separator();
+			ImGui::Text("%s", m_SquareEntity.GetComponent<TagComponent>().Tag.c_str());
+
+			auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
+			ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
+			ImGui::Separator();
+
+		}
+
+
+		ImGui::DragFloat3("Camera Transform",
+			glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
+
+		if (ImGui::Checkbox("Camera A", &m_PrimaryCamera))
+		{
+			m_CameraEntity.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
+			m_SecondCamera.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
+		}
+
+		{
+			auto& camera = m_SecondCamera.GetComponent<CameraComponent>().Camera;
+			float orthoSize = camera.GetOrthographicSize();
+			if (ImGui::DragFloat("Second Camera Ortho Size", &orthoSize))
+				camera.SetOrthographicSize(orthoSize);
+		}*/
+
 
 		// if having the images rendered upside down in ImGui, add ImVec2{ 0,1 }, 
 		// ImVec2{1,0} to the parameters of ImGui::Image to change the UV's of the image
@@ -198,8 +338,14 @@ namespace Razor
 		//tilL hERE IMPORTANT CODE
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });
 		ImGui::Begin("Viewport");
+
+		m_ViewportFocused = ImGui::IsWindowFocused();
+		m_ViewportHovered = ImGui::IsWindowHovered();
+
+		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-		if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize))
+		if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize) && viewportPanelSize.x > 0 && viewportPanelSize.y > 0)
 		{
 			m_Framebuffer->Resize((uint32_t)viewportPanelSize.x, (uint32_t)viewportPanelSize.y);
 			m_ViewportSize = { viewportPanelSize.x , viewportPanelSize.y };
@@ -208,16 +354,150 @@ namespace Razor
 		}
 
 		ImGui::Image((void*)m_Framebuffer->GetColorAttachmentRendererID(), ImVec2{ m_ViewportSize.x, m_ViewportSize.y });
+		
+		//m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+
+		//Gizmos
+		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		if (selectedEntity && m_GizmoType != -1)
+		{
+			ImGuizmo::SetOrthographic(false);
+			ImGuizmo::SetDrawlist();
+
+			float windowWidth= (float)ImGui::GetWindowWidth();
+			float windowHeight = (float)ImGui::GetWindowHeight();
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+			//Camera
+			auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+			const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+			const glm::mat4& cameraProjection = camera.GetProjection();
+			glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+
+			//Entity transform
+			auto& tc = selectedEntity.GetComponent<TransformComponent>();
+			glm::mat4 transform = tc.GetTransform();
+
+			//Snapping 
+			bool Snap = Input::IsKeyPressed(Key::LeftControl);
+			float snapValue = 0.5f;//Snap to 0.5m for translation/Scale
+			//Snap to 45 degrees rotation
+			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+			{
+				snapValue = 45.0f;
+			}
+
+			float snapValues[3] = { snapValue ,snapValue ,snapValue };
+
+			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection), 
+				(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
+				nullptr, Snap ? snapValues : nullptr);
+
+			if (ImGuizmo::IsUsing())
+			{
+
+				glm::vec3 translation, rotation, scale;
+				Math::DecomposeTransform(transform, translation, rotation, scale);
+
+
+				glm::vec3 deltaRotation = rotation - tc.Rotation;
+				tc.Translation = translation;
+				tc.Rotation += deltaRotation;
+				tc.Scale = scale;
+			}
+		}
+		 
+		
+		
 		ImGui::End();
 		ImGui::PopStyleVar();
 
 		ImGui::End();
 	}
 
-	void EditorLayer::OnEvent(Razor::Event& e)
+	void EditorLayer::OnEvent(Event& e)
 	{
 		m_CameraController.OnEvent(e);
 
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<KeyPressedEvent>(RZ_BIND_EVENT_FN(EditorLayer::OnKeyPressed)); 
+	}
+
+	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
+	{
+		if(e.GetRepeatCount() > 0)
+			return false;
+
+		bool control= Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl); 
+		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift); 
+		switch (e.GetKeyCode())
+		{
+			case Key::N:
+			{
+				if (control)
+					NewScene();
+				break;
+			}
+			case Key::O:
+			{
+				if (control)
+					OpenScene();
+				break;
+			}
+			case Key::S:
+			{
+				if (control && shift)
+					SaveSceneAs();
+				break;
+			}
+			case Key::Q:
+				m_GizmoType = -1;
+				break;
+			case Key::W:
+				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+				break;
+			case Key::E:
+				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+				break;
+			case Key::R:
+				m_GizmoType = ImGuizmo::OPERATION::SCALE;
+				break;
+
+		}
+
+
+	}
+
+	void EditorLayer::NewScene()
+	{
+		m_ActiveScene = CreateRef<Scene>();
+		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::OpenScene()
+	{
+		std::string filepath = FileDialogs::OpenFile("Razor Scene (*.razor)\0*.razor\0");
+		if (!filepath.empty())
+		{
+			m_ActiveScene = CreateRef<Scene>();
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Deserialize(filepath);
+		}
+	}
+
+	void EditorLayer::SaveSceneAs()
+	{
+		std::string filepath = FileDialogs::SaveFile("Razor Scene (*.razor)\0*.razor\0");
+
+		if (!filepath.empty())
+		{
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Serialize(filepath);
+		}
 	}
 
 }
