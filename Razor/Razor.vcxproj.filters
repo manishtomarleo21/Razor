@@ -28,6 +28,9 @@
     <Filter Include="src\Razor\ImGui">
       <UniqueIdentifier>{F4B247F1-603E-B5B5-694F-38AAD55911B6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Razor\Math">
+      <UniqueIdentifier>{631188E0-4FDF-7BE6-3873-EC0C24E0574B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Razor\Renderer">
       <UniqueIdentifier>{30254CE2-1C09-0D38-8569-078B716CF7B9}</UniqueIdentifier>
     </Filter>
@@ -84,6 +87,9 @@
     <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLUniformBuffer.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
@@ -120,7 +126,13 @@
     <ClInclude Include="src\Razor\Core\MouseButtonCodes.h">
       <Filter>src\Razor\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Razor\Core\Timer.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\Razor\Core\Timestep.h">
+      <Filter>src\Razor\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Core\UUID.h">
       <Filter>src\Razor\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Razor\Core\Window.h">
@@ -147,10 +159,16 @@
     <ClInclude Include="src\Razor\ImGui\ImGuiLayer.h">
       <Filter>src\Razor\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="src\Razor\Math\Math.h">
+      <Filter>src\Razor\Math</Filter>
+    </ClInclude>
     <ClInclude Include="src\Razor\Renderer\Buffer.h">
       <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Razor\Renderer\Camera.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\EditorCamera.h">
       <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Razor\Renderer\Framebuffer.h">
@@ -184,6 +202,9 @@
       <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Razor\Renderer\Texture.h">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Razor\Renderer\UniformBuffer.h">
       <Filter>src\Razor\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Razor\Renderer\VertexArray.h">
@@ -1487,6 +1508,9 @@
     <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLUniformBuffer.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
@@ -1511,13 +1535,22 @@
     <ClCompile Include="src\Razor\Core\Log.cpp">
       <Filter>src\Razor\Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\Razor\Core\UUID.cpp">
+      <Filter>src\Razor\Core</Filter>
+    </ClCompile>
     <ClCompile Include="src\Razor\ImGui\ImGuiBuild.cpp">
       <Filter>src\Razor\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="src\Razor\ImGui\ImGuiLayer.cpp">
       <Filter>src\Razor\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="src\Razor\Math\Math.cpp">
+      <Filter>src\Razor\Math</Filter>
+    </ClCompile>
     <ClCompile Include="src\Razor\Renderer\Buffer.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\EditorCamera.cpp">
       <Filter>src\Razor\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Razor\Renderer\Framebuffer.cpp">
@@ -1548,6 +1581,9 @@
       <Filter>src\Razor\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Razor\Renderer\Texture.cpp">
+      <Filter>src\Razor\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Razor\Renderer\UniformBuffer.cpp">
       <Filter>src\Razor\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Razor\Renderer\VertexArray.cpp">

@@ -3,11 +3,15 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <filesystem>
 
 #include "Razor/Scene/Components.h"
+#include <cstring>
 
 namespace Razor
 {
+	extern const std::filesystem::path g_AssetPath;
+
 	SceneHierarchyPanels::SceneHierarchyPanels(const Ref<Scene>& context)
 	{
 		SetContext(context);
@@ -21,27 +25,30 @@ namespace Razor
 	{
 		ImGui::Begin("Scene Hierarchy");
 
-		m_Context->m_Registry.view<entt::entity>().each([this](auto entityID)
-			{
-
-				Entity entity{ entityID, m_Context.get() };
-				DrawEntityNode(entity);
-				
-			});
-
-		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
-			m_SelectionContext = {};
-
-
-		if (ImGui::BeginPopupContextWindow(0, 1 | ImGuiPopupFlags_NoOpenOverItems))
+		if (m_Context)
 		{
-			if (ImGui::MenuItem("Create Empty Entity"))
-				m_Context->CreateEntity("Empty Entity");
+			m_Context->m_Registry.view<entt::entity>().each([this](auto entityID)
+				{
 
-			ImGui::EndPopup();
+					Entity entity{ entityID, m_Context.get() };
+					DrawEntityNode(entity);
+
+				});
+
+			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+				m_SelectionContext = {};
+
+
+			if (ImGui::BeginPopupContextWindow(0, 1 | ImGuiPopupFlags_NoOpenOverItems))
+			{
+				if (ImGui::MenuItem("Create Empty Entity"))
+					m_Context->CreateEntity("Empty Entity");
+
+				ImGui::EndPopup();
+			}
+
+
 		}
-
-
 		ImGui::End();
 
 		ImGui::Begin("Properties");
@@ -75,6 +82,10 @@ namespace Razor
 		ImGui::End();
 
 
+	}
+	void SceneHierarchyPanels::SetSelectedEntity(Entity entity)
+	{
+		m_SelectionContext = entity;
 	}
 	void SceneHierarchyPanels::DrawEntityNode(Entity entity)
 	{
@@ -261,18 +272,50 @@ namespace Razor
 
 		if (ImGui::BeginPopup("AddComponent"))
 		{
-			if (ImGui::MenuItem("Camera"))
+			if (!m_SelectionContext.HasComponent<CameraComponent>()) //if error it was without this if
 			{
-				m_SelectionContext.AddComponent<CameraComponent>();
-				ImGui::CloseCurrentPopup();
+				if (ImGui::MenuItem("Camera"))
+				{
+					m_SelectionContext.AddComponent<CameraComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			
+			if (!m_SelectionContext.HasComponent<SpriteRendererComponent>())
+			{
+				if (ImGui::MenuItem("Sprite Renderer"))
+				{
+					m_SelectionContext.AddComponent<SpriteRendererComponent>();
+					ImGui::CloseCurrentPopup();
+				}
 			}
 
-			if (ImGui::MenuItem("Sprite Renderer"))
+			if (!m_SelectionContext.HasComponent<CircleRendererComponent>())
 			{
-				m_SelectionContext.AddComponent<SpriteRendererComponent>();
-				ImGui::CloseCurrentPopup();
+				if (ImGui::MenuItem("Circle Renderer"))
+				{
+					m_SelectionContext.AddComponent<CircleRendererComponent>();
+					ImGui::CloseCurrentPopup();
+				}
 			}
 
+			if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
+			{
+				if (ImGui::MenuItem("Rigidbody 2D"))
+				{
+					m_SelectionContext.AddComponent<RigidBody2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
+			{
+				if (ImGui::MenuItem("Box Collider 2D"))
+				{
+					m_SelectionContext.AddComponent<BoxCollider2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
 
 			ImGui::EndPopup();
 		}
@@ -452,8 +495,83 @@ namespace Razor
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
 		{
 				ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+				
+				ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
+
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+					{
+						const wchar_t* path = (const wchar_t*)payload->Data;
+						std::filesystem::path texturePath = std::filesystem::path(g_AssetPath) / path;
+						component.Texture = Texture2D::Create(texturePath.string());
+
+					}
+
+					ImGui::EndDragDropTarget();
+				}
+
+
+				//Texture
+				ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.0f);
 
 		});
+
+		DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [](auto& component)
+			{
+				ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+
+				ImGui::DragFloat("Thickness", &component.Thickness, 0.025f, 0.0f, 1.0f);
+				ImGui::DragFloat("Fade", &component.Fade, 0.00025f, 0.0f, 1.0f);
+
+			});
+
+
+		//Physics 2d
+
+		DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](auto& component)
+			{
+
+				const char* bodyTypeStrings[] = { "Static", "Dynamic", "Kinematic"};
+				const char* currentBodyTypeString = bodyTypeStrings[(int)component.Type];
+
+				if (ImGui::BeginCombo("Body Type", currentBodyTypeString))
+				{
+					for (int i = 0; i < 2; i++)
+					{
+						bool isSelected = currentBodyTypeString == bodyTypeStrings[i];
+						if (ImGui::Selectable(bodyTypeStrings[i], isSelected))
+						{
+							currentBodyTypeString = bodyTypeStrings[i];
+							component.Type = (RigidBody2DComponent::BodyType)i; 
+						}
+
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+
+
+					ImGui::EndCombo();
+				}
+
+				
+				ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
+
+			});
+
+		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component)
+			{
+
+				ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
+				ImGui::DragFloat2("Size", glm::value_ptr(component.Size)); //offset in place of size
+				ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
+
+
+			});
+
 
 
 		/*if (entity.HasComponent<SpriteRendererComponent>())
@@ -491,3 +609,4 @@ namespace Razor
 		}*/
 	}
 }
+

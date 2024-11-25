@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>rzpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RZ_PLATFORM_WINDOWS;RZ_BUILD_DLL;GLFW_INCLUDE_NONE;YAML_CPP_STATIC_DEFINE;RZ_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\Glad\include;vendor\GLFW\include;vendor\imgui\include;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\Box2D\include;vendor\Glad\include;vendor\GLFW\include;vendor\imgui\include;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -98,7 +98,7 @@
       <PrecompiledHeaderFile>rzpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RZ_PLATFORM_WINDOWS;RZ_BUILD_DLL;GLFW_INCLUDE_NONE;YAML_CPP_STATIC_DEFINE;RZ_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\Glad\include;vendor\GLFW\include;vendor\imgui\include;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\Box2D\include;vendor\Glad\include;vendor\GLFW\include;vendor\imgui\include;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -123,7 +123,7 @@
       <PrecompiledHeaderFile>rzpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>RZ_PLATFORM_WINDOWS;RZ_BUILD_DLL;GLFW_INCLUDE_NONE;YAML_CPP_STATIC_DEFINE;RZ_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\Glad\include;vendor\GLFW\include;vendor\imgui\include;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\Box2D\include;vendor\Glad\include;vendor\GLFW\include;vendor\imgui\include;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -149,6 +149,7 @@
     <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLShader.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h" />
+    <ClInclude Include="src\Platform\OpenGL\OpenGLUniformBuffer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
@@ -161,7 +162,9 @@
     <ClInclude Include="src\Razor\Core\LayerStack.h" />
     <ClInclude Include="src\Razor\Core\Log.h" />
     <ClInclude Include="src\Razor\Core\MouseButtonCodes.h" />
+    <ClInclude Include="src\Razor\Core\Timer.h" />
     <ClInclude Include="src\Razor\Core\Timestep.h" />
+    <ClInclude Include="src\Razor\Core\UUID.h" />
     <ClInclude Include="src\Razor\Core\Window.h" />
     <ClInclude Include="src\Razor\Core\core.h" />
     <ClInclude Include="src\Razor\Debug\Instrumentor.h" />
@@ -173,6 +176,7 @@
     <ClInclude Include="src\Razor\Math\Math.h" />
     <ClInclude Include="src\Razor\Renderer\Buffer.h" />
     <ClInclude Include="src\Razor\Renderer\Camera.h" />
+    <ClInclude Include="src\Razor\Renderer\EditorCamera.h" />
     <ClInclude Include="src\Razor\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Razor\Renderer\GraphicsContext.h" />
     <ClInclude Include="src\Razor\Renderer\OrthographicCamera.h" />
@@ -184,6 +188,7 @@
     <ClInclude Include="src\Razor\Renderer\Shader.h" />
     <ClInclude Include="src\Razor\Renderer\SubTexture2D.h" />
     <ClInclude Include="src\Razor\Renderer\Texture.h" />
+    <ClInclude Include="src\Razor\Renderer\UniformBuffer.h" />
     <ClInclude Include="src\Razor\Renderer\VertexArray.h" />
     <ClInclude Include="src\Razor\Scene\Components.h" />
     <ClInclude Include="src\Razor\Scene\Entity.h" />
@@ -619,6 +624,7 @@
     <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp" />
+    <ClCompile Include="src\Platform\OpenGL\OpenGLUniformBuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsPlatformUtils.cpp" />
@@ -627,10 +633,12 @@
     <ClCompile Include="src\Razor\Core\Layer.cpp" />
     <ClCompile Include="src\Razor\Core\LayerStack.cpp" />
     <ClCompile Include="src\Razor\Core\Log.cpp" />
+    <ClCompile Include="src\Razor\Core\UUID.cpp" />
     <ClCompile Include="src\Razor\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Razor\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Razor\Math\Math.cpp" />
     <ClCompile Include="src\Razor\Renderer\Buffer.cpp" />
+    <ClCompile Include="src\Razor\Renderer\EditorCamera.cpp" />
     <ClCompile Include="src\Razor\Renderer\Framebuffer.cpp" />
     <ClCompile Include="src\Razor\Renderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Razor\Renderer\OrthographicCameraController.cpp" />
@@ -641,6 +649,7 @@
     <ClCompile Include="src\Razor\Renderer\Shader.cpp" />
     <ClCompile Include="src\Razor\Renderer\SubTexture2D.cpp" />
     <ClCompile Include="src\Razor\Renderer\Texture.cpp" />
+    <ClCompile Include="src\Razor\Renderer\UniformBuffer.cpp" />
     <ClCompile Include="src\Razor\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Razor\Scene\Entity.cpp" />
     <ClCompile Include="src\Razor\Scene\Scene.cpp" />
@@ -655,6 +664,9 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="vendor\Box2D\Box2D.vcxproj">
+      <Project>{A434E80C-1049-10BE-D9CA-B31D459E0CEF}</Project>
+    </ProjectReference>
     <ProjectReference Include="vendor\Glad\Glad.vcxproj">
       <Project>{BDD6857C-A90D-870D-52FA-6C103E10030F}</Project>
     </ProjectReference>

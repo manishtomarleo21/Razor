@@ -19,8 +19,12 @@ IncludeDir["glm"] = "Razor/vendor/glm"
 IncludeDir["stb_image"] = "Razor/vendor/stb_image"
 IncludeDir["entt"] = "Razor/vendor/entt/include" 
 IncludeDir["yaml_cpp"] = "Razor/vendor/yaml-cpp/include" 
+IncludeDir["Box2D"] = "Razor/vendor/Box2D/include" 
 IncludeDir["ImGuizmo"] = "Razor/vendor/ImGuizmo" 
 
+
+
+include "Razor/vendor/Box2D"
 include "Razor/vendor/Glad"
 include "Razor/vendor/GLFW"
 include "Razor/vendor/imgui"
@@ -54,6 +58,7 @@ project "Razor"
     includedirs {
         "%{prj.name}/src",
         "%{prj.name}/vendor/spdlog/include",
+        "%{IncludeDir.Box2D}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.ImGui}",
@@ -61,10 +66,12 @@ project "Razor"
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.yaml_cpp}",
-        "%{IncludeDir.ImGuizmo}"
+        "%{IncludeDir.ImGuizmo}",
+       
     }
 
     links{
+        "Box2D",
         "Glad",
         "GLFW",
         "ImGui",
@@ -104,6 +111,9 @@ filter "configurations:Debug"
     runtime "Debug"
     systemversion "latest"  -- Add this to ensure the configuration is applied
 
+    
+
+
 filter "configurations:Release"
     defines "RZ_RELEASE"
 --    buildoptions "/MD"
@@ -111,12 +121,17 @@ filter "configurations:Release"
     optimize "on"
     systemversion "latest"  -- Add this to ensure the configuration is applied
 
+   
+
 filter "configurations:Dist"
     defines "RZ_DIST"
 --    buildoptions "/MD"
     runtime "Release"
     optimize "on"
     systemversion "latest"  -- Add this to ensure the configuration is applied
+
+
+    
 
 project "Sandbox"
     location "Sandbox"
@@ -198,18 +213,18 @@ project "Razoredge"
         "Razor/vendor/spdlog/include",
         "Razor/src",
         "Razor/vendor",
+        "%{IncludeDir.Box2D}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.yaml_cpp}",
         "%{IncludeDir.ImGuizmo}"
-
-       
     }
 
 
   
     links {
         "Razor"
+        
     }
 
     filter "system:windows"

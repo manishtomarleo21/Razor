@@ -3,10 +3,14 @@
 #include "VertexArray.h"
 #include "Shader.h"
 #include "RenderCommand.h"
+//#include "Texture.h"
+//#include "Platform/OpenGL/OpenGLShader.h"
+#include "Razor/Renderer/UniformBuffer.h"
+
 
 #include <glm/gtc/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
-
+#include <glm/gtc/type_ptr.hpp>
+//#include <glad/glad.h>
 
 
 //#include "Platform/OpenGL/OpenGLShader.h"
@@ -21,6 +25,20 @@ namespace Razor
 		glm::vec2 TexCoord;
 		float TexIndex;
 		float TilingFactor;
+		//Editor Only
+		int EntityID;
+	};
+
+	struct CircleVertex
+	{
+		glm::vec3 WorldPosition;
+		glm::vec3 LocalPosition;
+		glm::vec4 Color;
+		float Thickness;
+		float Fade;
+
+		//Editor Only
+		int EntityID;
 	};
 
 	struct Renderer2DData
@@ -33,12 +51,23 @@ namespace Razor
 
 		Ref<VertexArray> QuadVertexArray;
 		Ref<VertexBuffer> QuadVertexBuffer;
-		Ref<Shader> TextureShader;
+		Ref<Shader> QuadShader;
 		Ref<Texture2D> WhiteTexture;
+		
+		//Circle
+		Ref<VertexArray> CircleVertexArray;
+		Ref<VertexBuffer> CircleVertexBuffer;
+		Ref<Shader> CircleShader;
 
+			
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
 		QuadVertex* QuadVertexBufferPtr = nullptr;
+
+		//Circle
+		uint32_t CircleIndexCount = 0;
+		CircleVertex* CircleVertexBufferBase = nullptr;
+		CircleVertex* CircleVertexBufferPtr = nullptr;
 
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1;
@@ -48,6 +77,10 @@ namespace Razor
 		
 
 		Renderer2D::Statistics Stats;
+
+
+		//Custom
+		//uint32_t CameraUBO = 0;
 	};
 
 	static Renderer2DData s_Data;
@@ -69,7 +102,8 @@ namespace Razor
 		{ ShaderDataType::Float4, "a_Color"},
 		{ ShaderDataType::Float2, "a_TexCoord"},
 		{ ShaderDataType::Float, "a_TexIndex"},
-		{ ShaderDataType::Float, "a_TilingFactor"}
+		{ ShaderDataType::Float, "a_TilingFactor"},
+		{ ShaderDataType::Int, "a_EntityID"}
 			});
 
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
@@ -98,6 +132,23 @@ namespace Razor
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] quadIndices;
 
+
+		//Cirecles
+		s_Data.CircleVertexArray = VertexArray::Create();
+		s_Data.CircleVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(CircleVertex));
+		s_Data.CircleVertexBuffer->SetLayout({
+		{ ShaderDataType::Float3, "a_WorldPosition"},
+		{ ShaderDataType::Float3, "a_LocalPosition"},
+		{ ShaderDataType::Float4, "a_Color"},
+		{ ShaderDataType::Float, "a_Thickness"},
+		{ ShaderDataType::Float, "a_Fade"},
+		{ ShaderDataType::Int, "a_EntityID"}
+			});
+
+		s_Data.CircleVertexArray->AddVertexBuffer(s_Data.CircleVertexBuffer);
+		s_Data.CircleVertexArray->SetIndexBuffer(quadIB);
+		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
+
 		/*uint32_t squarIndices[6] = { 0, 1, 2, 2, 3, 0 };*/
 
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
@@ -112,10 +163,16 @@ namespace Razor
 		}
 
 
-		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
+		s_Data.QuadShader = Shader::Create("assets/shaders/Renderer2D_Quad.glsl");
+		s_Data.CircleShader = Shader::Create("assets/shaders/Renderer2D_Circle.glsl");
 
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+		//s_Data.TextureShader = Shader::Create("R");
+		/*std::string shaderPath = "assets/shaders/texture.glsl";
+		RZ_CORE_INFO("Loading shader from: {0}", shaderPath);*/
+
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+
 
 	
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
@@ -124,6 +181,20 @@ namespace Razor
 		s_Data.QuadVertexPositions[1] = {  0.5, -0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[2] = {  0.5,  0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[3] = { -0.5,  0.5f, 0.0f, 1.0f };
+
+
+		//Razor::OpenGLShader shader("assets/shaders/Texture.glsl");
+		//shader.Bind();
+
+		//// Set up the Camera uniform block
+		//shader.SetUniformBlock("Camera",0, sizeof(glm::mat4));
+		//----------------------------------------------------------------------------
+
+		//glGenBuffers(1, &s_Data.CameraUBO);
+		//glBindBuffer(GL_UNIFORM_BUFFER, s_Data.CameraUBO);
+		//glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for the matrix
+		//glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind the UBO
+		
 
 	}
 	void Renderer2D::Shutdown()
@@ -134,64 +205,150 @@ namespace Razor
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
 		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+		//glm::mat4 viewProj = camera.GetProjection() ;
 
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
 
-		s_Data.QuadIndexCount = 0;
+		//-------------------------------------------------------------------
+		// Update the UBO with the current view-projection matrix
+		//glBindBuffer(GL_UNIFORM_BUFFER, s_Data.CameraUBO);
+		//glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(viewProj)); // Update UBO data
+		//glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		//--------------------------------------------------------------------------------
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+
+		/*s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 
-		s_Data.TextureSlotIndex = 1;
+		s_Data.TextureSlotIndex = 1;*/
+		StartBatch();
+	}
+	void Renderer2D::BeginScene(const EditorCamera& camera)
+	{
+		glm::mat4 viewProj = camera.GetViewProjection();
+
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+
+		/*s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+
+		s_Data.TextureSlotIndex = 1;*/
+		StartBatch();
+
 	}
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
-		s_Data.QuadIndexCount = 0;
+		/*s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 		
-		s_Data.TextureSlotIndex = 1;
+		s_Data.TextureSlotIndex = 1;*/
+		StartBatch();
+
 
 	}
 	void Renderer2D::EndScene()
 	{
-		uint32_t dataSize = (uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase;
-		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+		/*uint32_t dataSize = (uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase;
+		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);*/
 
 		Flush();
 	}
+
+	void Renderer2D::StartBatch()
+	{
+
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+
+		s_Data.TextureSlotIndex = 1;
+	}
+
 	void Renderer2D::Flush()
 	{
 		//if (s_Data.QuadIndexCount == 0)
 			//return;
 
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+		
+		//s_Data.WhiteTexture->GetRendererID();
+		//--------------------------------------------------------------
+
+		//CUstom commentin currntly from here --------------------------------------------
+
+		/*for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 		{
 			s_Data.TextureSlots[i]->Bind(i);
 		}
 
 		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
 
-		s_Data.Stats.DrawCalls++;
-
+		s_Data.Stats.DrawCalls++;*/
+		//------------------------------------------------------------till here
 		//Custom
 		//s_Data.QuadIndexCount = 0;
 		//s_Data.TextureSlotIndex = 0;
 		//Custom
 
+
+		if (s_Data.QuadIndexCount)
+		{
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
+			s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+
+			// Bind textures
+			for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+				s_Data.TextureSlots[i]->Bind(i);
+
+			s_Data.QuadShader->Bind();
+			RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
+			s_Data.Stats.DrawCalls++;
+		}
+
+
+
+		if (s_Data.CircleIndexCount)
+		{
+			uint32_t dataSize = (uint8_t*)s_Data.CircleVertexBufferPtr - (uint8_t*)s_Data.CircleVertexBufferBase;
+			s_Data.CircleVertexBuffer->SetData(s_Data.CircleVertexBufferBase, dataSize);
+
+			s_Data.CircleShader->Bind();
+			RenderCommand::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
+			s_Data.Stats.DrawCalls++;
+		}
+
+
+
 	}
 
 
-	void Renderer2D::FlushAndReset() {
+	/*void Renderer2D::FlushAndReset() {
 
 		EndScene();
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+
+
 		s_Data.TextureSlotIndex = 1;
+	}*/
+
+
+	void Renderer2D::NextBatch()
+	{
+		Flush();
+		StartBatch();
 	}
+
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 	{
@@ -374,7 +531,8 @@ namespace Razor
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
-			FlushAndReset();
+			//FlushAndReset();
+			NextBatch();
 		}
 
 
@@ -415,16 +573,19 @@ namespace Razor
 
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int entityID)
 	{
 		constexpr size_t quadVertexCount = 4;
 		constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, {1.0f, 0.0f }, {1.0f, 1.0f }, {0.0f, 1.0f } };
+		//constexpr glm::vec2 textureCoords[] = { {0.0f, 1.0f}, {1.0f, 1.0f }, {1.0f, 0.0f }, {0.0f, 0.0f } };
+
 		const float texIndex = 0.0f; //White Texture
 		const float tilingFactor = 1.0f;
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
-			FlushAndReset();
+			//FlushAndReset();
+			NextBatch();
 		}
 
 	
@@ -434,6 +595,7 @@ namespace Razor
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = texIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -442,16 +604,18 @@ namespace Razor
 
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D> texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D> texture, float tilingFactor, const glm::vec4& tintColor, int entityID)
 	{
 		constexpr size_t quadVertexCount = 4;
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-		//constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, {1.0f, 0.0f }, {1.0f, 1.0f }, {0.0f, 1.0f } };
-		constexpr glm::vec2 textureCoords[] = { {0.0f, 1.0f}, {1.0f, 1.0f }, {1.0f, 0.0f }, {0.0f, 0.0f } };
+		constexpr glm::vec2 textureCoords[] = { {0.0f, 0.0f}, {1.0f, 0.0f }, {1.0f, 1.0f }, {0.0f, 1.0f } };
+		//constexpr glm::vec2 textureCoords[] = { {0.0f, 1.0f}, {1.0f, 1.0f }, {1.0f, 0.0f }, {0.0f, 0.0f } };
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
-			FlushAndReset();
+			//FlushAndReset();
+			NextBatch();
+
 		}
 
 
@@ -480,6 +644,7 @@ namespace Razor
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -504,7 +669,9 @@ namespace Razor
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
-			FlushAndReset();
+			//FlushAndReset();
+			NextBatch();
+
 		}
 
 		const float texIndex = 0.0f; //White Texture
@@ -591,7 +758,9 @@ namespace Razor
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
-			FlushAndReset();
+			//FlushAndReset();
+			NextBatch();
+
 		}
 
 		float textureIndex = 0.0f;
@@ -693,7 +862,9 @@ namespace Razor
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
-			FlushAndReset();
+			//FlushAndReset();
+			NextBatch();
+
 		}
 
 		float textureIndex = 0.0f;
@@ -731,6 +902,39 @@ namespace Razor
 		s_Data.QuadIndexCount += 6;
 		s_Data.Stats.QuadCount++;
 
+	}
+
+	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade, int entityID)
+	{
+		
+		/*if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
+			FlushAndReset();*/
+		
+
+
+		for (size_t i = 0; i < 4; i++) {
+			s_Data.CircleVertexBufferPtr->WorldPosition = transform * s_Data.QuadVertexPositions[i];
+			s_Data.CircleVertexBufferPtr->LocalPosition = s_Data.QuadVertexPositions[i] * 2.0f;
+			s_Data.CircleVertexBufferPtr->Color = color;
+			s_Data.CircleVertexBufferPtr->Thickness = thickness;
+			s_Data.CircleVertexBufferPtr->Fade = fade;
+			s_Data.CircleVertexBufferPtr->EntityID = entityID;
+			s_Data.CircleVertexBufferPtr++;
+
+		}
+
+
+
+		s_Data.CircleIndexCount += 6;
+		s_Data.Stats.QuadCount++;
+	}
+
+	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
+	{
+		if (src.Texture)
+			DrawQuad(transform, src.Texture, src.TilingFactor, src.Color, entityID);
+		else
+			DrawQuad(transform, src.Color, entityID);
 	}
 
 

@@ -28,6 +28,7 @@
 #version 330 core
 			
 			layout(location = 0) out vec4 color;
+			layout(location = 1) out int color2;
 
 			in vec4 v_Color;
 			in vec2 v_TexCoord;
@@ -45,5 +46,5 @@
 				//Custom if not work or any issue use v_TexCoord in place of flippedTexCore and delete above line
 				color = texture(u_Textures[int(v_TexIndex)], flippedTexCoord * v_TilingFactor) * v_Color;
 				
-				
+				color2 = 50;
 			}

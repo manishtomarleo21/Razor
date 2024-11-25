@@ -18,7 +18,7 @@ namespace Razor
 		//glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); 
@@ -28,6 +28,8 @@ namespace Razor
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		:m_Path(path)
 	{
+		stbi_set_flip_vertically_on_load(true); //custom for flipped images
+
 		int width, height, channels;
 		stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 		RZ_CORE_ASSERT(data, "Failed to load image!");
@@ -65,7 +67,7 @@ namespace Razor
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		//glTexParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		//glTexParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 

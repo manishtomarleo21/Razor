@@ -17,20 +17,23 @@
 
 namespace Razor
 {
-
+	extern const std::filesystem::path g_AssetPath;
 
 	EditorLayer::EditorLayer()
-		:Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f)
+		:Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f) 
 	{
 	}
 
 	void EditorLayer::OnAttack() 
 	{
 		m_CheckerboardTexture = Texture2D::Create("assets/textures/checkerboard.png");
+		m_IconPlay= Texture2D::Create("Resources/Icons/PlayButton.png");
+		m_IconStop= Texture2D::Create("Resources/Icons/StopButton.png");
 		
 
 		//Latest ep 71 
 		FramebufferSpecification fbSpec;
+		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_Framebuffer = Framebuffer::Create(fbSpec);
@@ -40,6 +43,10 @@ namespace Razor
 
 
 		m_ActiveScene = CreateRef<Scene>();
+
+		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
+
+
 #if 0
 		//Entity
 		auto square = m_ActiveScene->CreateEntity("Green Square");
@@ -93,7 +100,7 @@ namespace Razor
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 		m_SecondCamera.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 #endif
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		//m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 		 
 	}
@@ -114,15 +121,19 @@ namespace Razor
 		{
 			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
-			//m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
+			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
 		}
 
-		if(m_ViewportFocused)
+		//Update
+		/*if (m_ViewportFocused) 
 			m_CameraController.OnUpdate(ts);
-
 		
+		m_EditorCamera.OnUpdate(ts);*/
+		
+
+
 
 		//Renderer
 		Renderer2D::ResetStats();
@@ -134,6 +145,32 @@ namespace Razor
 		RenderCommand::Clear();
 
 		
+		//Clear our entity ID attachment to -1
+		m_Framebuffer->ClearAttachment(1, -1);
+
+		//For play And pause button NEW
+		switch (m_SceneState)
+		{
+			case SceneState::Edit:
+			{
+				if (m_ViewportFocused)
+					m_CameraController.OnUpdate(ts);
+
+				m_EditorCamera.OnUpdate(ts);
+				m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+				break;
+			}
+			case SceneState::Play:
+			{
+				m_ActiveScene->OnUpdateRuntime(ts);
+				break;
+			}
+		}
+
+
+
+
+
 
 		//static float rotation = 0.0f;
 		//rotation += ts * 20.0f;
@@ -143,7 +180,7 @@ namespace Razor
 		//Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 		//Update Scene
-		m_ActiveScene->OnUpdate(ts);
+		//m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
 
 		//For rotation use glm::radians
 
@@ -169,6 +206,33 @@ namespace Razor
 		}
 
 		Renderer2D::EndScene();*/
+
+
+
+		auto [mx, my] = ImGui::GetMousePos();
+		mx -= m_ViewportBouds[0].x;
+		my -= m_ViewportBouds[0].y; 
+
+		glm::vec2 viewportSize = m_ViewportBouds[1] - m_ViewportBouds[0];
+		my = viewportSize.y - my;
+
+		int mouseX = (int)mx;
+		int mouseY = (int)my;
+
+
+
+		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+		{
+			/*int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+			RZ_CORE_WARN("pixel-data = {0}", pixelData);*/
+			//RZ_CORE_WARN("pixel-data = {0}, {1}, {2}", mouseX, mouseY, pixelData);  // Log pixel data
+
+			int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
+			
+
+		}
+
 		m_Framebuffer->Unbind();
 
 		
@@ -287,11 +351,18 @@ namespace Razor
 
 
 		m_SceneHierarchyPanel.OnImGuiRender();
-
+		m_ContentBrowserPanel.OnImGuiRender();
 
 		//----our Window cODE important
 
 		ImGui::Begin("Stats");
+
+		std::string name = "None";
+		if (m_HoveredEntity)
+			name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
+
+		ImGui::Text("Hovered Entity: %s", name.c_str());
+
 
 		auto stats = Renderer2D::GetStats();
 		ImGui::Text("Renderer2D Stats: ");
@@ -339,10 +410,26 @@ namespace Razor
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });
 		ImGui::Begin("Viewport");
 
+		//From git
+
+		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+		auto viewportOffset = ImGui::GetWindowPos();
+		m_ViewportBouds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+		m_ViewportBouds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
 
+
+		///END
+		//auto viewportOffset = ImGui::GetCursorPos();//Include tab bar
+
+		//m_ViewportFocused = ImGui::IsWindowFocused();
+		//m_ViewportHovered = ImGui::IsWindowHovered();
+
 		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+		//Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportHovered);
 
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize) && viewportPanelSize.x > 0 && viewportPanelSize.y > 0)
@@ -357,6 +444,31 @@ namespace Razor
 		
 		//m_GizmoType = ImGuizmo::OPERATION::ROTATE;
 
+		/*auto windowSize = ImGui::GetWindowSize();
+		ImVec2 minBound = ImGui::GetWindowPos();
+
+		minBound.x += viewportOffset.x;
+		minBound.y += viewportOffset.y;
+
+		ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
+		m_ViewportBouds[0] = { minBound.x, minBound.y };
+		m_ViewportBouds[1] = { maxBound.x, maxBound.y };*/
+			
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+			{
+				const wchar_t* path = (const wchar_t*)payload->Data;
+				OpenScene(std::filesystem::path(g_AssetPath) / path);
+
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
+
+
 		//Gizmos
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
 		if (selectedEntity && m_GizmoType != -1)
@@ -366,13 +478,22 @@ namespace Razor
 
 			float windowWidth= (float)ImGui::GetWindowWidth();
 			float windowHeight = (float)ImGui::GetWindowHeight();
-			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+			//ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+			ImGuizmo::SetRect(m_ViewportBouds[0].x, m_ViewportBouds[0].y, m_ViewportBouds[1].x - m_ViewportBouds[0].x, m_ViewportBouds[1].y - m_ViewportBouds[0].y);
+
+			//Will need below code its just temporary commenting
 
 			//Camera
-			auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-			const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-			const glm::mat4& cameraProjection = camera.GetProjection();
-			glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+			//Runtime Camera from entity
+			//auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+			//const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+			//const glm::mat4& cameraProjection = camera.GetProjection();
+			//glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+
+			//Editor Camera
+			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
+			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+
 
 			//Entity transform
 			auto& tc = selectedEntity.GetComponent<TransformComponent>();
@@ -412,15 +533,49 @@ namespace Razor
 		ImGui::End();
 		ImGui::PopStyleVar();
 
+		UI_Toolbar();
 		ImGui::End();
 	}
+
+	void EditorLayer::UI_Toolbar()
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		auto& colors = ImGui::GetStyle().Colors;
+		const auto& buttonHovered = colors[ImGuiCol_ButtonHovered];
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonHovered.x, buttonHovered.y, buttonHovered.z, 0.5f));
+		const auto& buttonActive = colors[ImGuiCol_ButtonActive];
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
+
+		ImGui::Begin("##toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		
+		float size = ImGui::GetWindowHeight() - 12.0f; //4.0f
+		Ref<Texture2D> icon = m_SceneState == SceneState::Edit ? m_IconPlay : m_IconStop;
+		ImGui::SameLine((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5));
+		if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0,0), ImVec2(1,1), 0))
+		{
+			if (m_SceneState == SceneState::Edit)
+				OnScenePlay();
+			else if(m_SceneState == SceneState::Play)
+				OnSceneStop();
+		}
+		ImGui::PopStyleVar(2);
+		ImGui::PopStyleColor(3);
+
+		ImGui::End();
+	}
+
+
 
 	void EditorLayer::OnEvent(Event& e)
 	{
 		m_CameraController.OnEvent(e);
+		m_EditorCamera.OnEvent(e);
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(RZ_BIND_EVENT_FN(EditorLayer::OnKeyPressed)); 
+		dispatcher.Dispatch<MouseButtonPressedEvent>(RZ_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed)); 
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -446,10 +601,23 @@ namespace Razor
 			}
 			case Key::S:
 			{
-				if (control && shift)
-					SaveSceneAs();
+				if (control)
+				{
+					if (shift)
+						SaveSceneAs();
+					else
+						SaveScene();
+				}
 				break;
 			}
+			//Scene Commands
+			case Key::D:
+			{
+				if (control)
+					OnDuplicateEntity();
+				break;
+			}
+
 			case Key::Q:
 				m_GizmoType = -1;
 				break;
@@ -468,11 +636,24 @@ namespace Razor
 
 	}
 
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	{
+		if (e.GetMouseButton() == Mouse::ButtonLeft) 
+		{
+			if(m_HoveredEntity && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
+				m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
+		}
+			return false;
+	}
+
 	void EditorLayer::NewScene()
 	{
+
 		m_ActiveScene = CreateRef<Scene>();
 		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_EditorScenePath = std::filesystem::path();
+
 	}
 
 	void EditorLayer::OpenScene()
@@ -480,13 +661,61 @@ namespace Razor
 		std::string filepath = FileDialogs::OpenFile("Razor Scene (*.razor)\0*.razor\0");
 		if (!filepath.empty())
 		{
-			m_ActiveScene = CreateRef<Scene>();
+			/*m_ActiveScene = CreateRef<Scene>();
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 			SceneSerializer serializer(m_ActiveScene);
-			serializer.Deserialize(filepath);
+			serializer.Deserialize(filepath);*/
+			OpenScene(filepath);
 		}
+	}
+
+	void EditorLayer::OpenScene(const std::filesystem::path& path)
+	{
+		if (m_SceneState != SceneState::Edit)
+			OnSceneStop();
+
+		if (path.extension().string() != ".razor")
+		{
+			RZ_WARN("Could not load {0} - not a scene file", path.filename().string());
+			return;
+		}
+
+
+		Ref<Scene> newScene = CreateRef<Scene>();
+		SceneSerializer serializer(newScene);
+
+		if (serializer.Deserialize(path.string()))
+		{
+			m_EditorScene = newScene;
+
+			m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_SceneHierarchyPanel.SetContext(m_EditorScene);
+
+			m_ActiveScene = m_EditorScene;
+			m_EditorScenePath = path;
+		}
+
+		/*m_ActiveScene = CreateRef<Scene>();
+		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		SceneSerializer serializer(m_ActiveScene);
+		serializer.Deserialize(path.string());*/
+	}
+
+	void EditorLayer::SaveScene()
+	{
+		if (!m_EditorScenePath.empty())
+		{
+			/*SceneSerializer serializer(m_ActiveScene);
+			serializer.Serialize(m_EditorScenePath.string());*/
+
+			SerializeScene(m_ActiveScene, m_EditorScenePath);
+		}
+		else
+			SaveSceneAs();
 	}
 
 	void EditorLayer::SaveSceneAs()
@@ -495,9 +724,52 @@ namespace Razor
 
 		if (!filepath.empty())
 		{
-			SceneSerializer serializer(m_ActiveScene);
-			serializer.Serialize(filepath);
+			/*SceneSerializer serializer(m_ActiveScene);
+			serializer.Serialize(filepath);*/
+
+			SerializeScene(m_ActiveScene, filepath); 
+
+			m_EditorScenePath = filepath;
 		}
 	}
 
+	void EditorLayer::SerializeScene(Ref<Scene> scene, const std::filesystem::path& path)
+	{
+		SceneSerializer serializer(scene);
+		serializer.Serialize(path.string());
+	}
+
+	void EditorLayer::OnScenePlay()
+	{
+		m_SceneState = SceneState::Play;
+
+		m_ActiveScene = Scene::Copy(m_EditorScene);
+		m_ActiveScene->OnRuntimeStart();
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		//m_ActiveScene->OnRuntimeStart();
+	}
+
+	void EditorLayer::OnSceneStop()
+	{
+		m_SceneState = SceneState::Edit;
+		m_ActiveScene->OnRuntimeStop();
+
+		m_ActiveScene = m_EditorScene;
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+	}
+
+	void EditorLayer::OnDuplicateEntity()
+	{
+		if (m_SceneState != SceneState::Edit)
+			return;
+
+		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		if (selectedEntity)
+			m_EditorScene->DuplicateEntity(selectedEntity);
+	}
+
+	
 }

@@ -16,3 +16,6 @@
 [submodule "Razor/vendor/ImGuizmo"]
 	path = Razor/vendor/ImGuizmo
 	url = https://github.com/TheCherno/imguizmo
+[submodule "Razor/vendor/Box2D"]
+	path = Razor/vendor/Box2D
+	url = https://github.com/TheCherno/box2d

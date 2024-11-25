@@ -31,11 +31,12 @@ namespace Razor
 
 		//if (indexCount == 0) return; // Skip rendering if indexCount is 0
 		
+		vertexArray->Bind();
 		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffers()->GetCount();
 		//custom
 
 		//uint32_t count = indexCount ? vertexArray->GetIndexBuffers()->GetCount() : indexCount; 
 		glDrawElements(GL_TRIANGLES,count, GL_UNSIGNED_INT, nullptr);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		//glBindTexture(GL_TEXTURE_2D, 0);
 	}
 } 
